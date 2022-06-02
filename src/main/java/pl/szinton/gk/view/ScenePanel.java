@@ -6,9 +6,9 @@ import pl.szinton.gk.math.Vector2i;
 import javax.swing.*;
 import java.awt.*;
 
-public class ScenePanel extends JPanel {
+import static pl.szinton.gk.utils.Constants.DEFAULT_BACKGROUND_COLOR;
 
-    private final static Color DEFAULT_BACKGROUND_COLOR = new Color(150, 150, 150);
+public class ScenePanel extends JPanel {
 
     protected final Camera3D camera;
     private Scene scene;
@@ -33,6 +33,5 @@ public class ScenePanel extends JPanel {
         g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
 
         scene.render(g2d, camera);
-        System.out.println(this.getWidth() + ":" + this.getHeight());
     }
 }

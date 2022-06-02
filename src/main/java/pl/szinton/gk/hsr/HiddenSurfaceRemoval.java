@@ -4,6 +4,7 @@ import pl.szinton.gk.math.Vector2i;
 import pl.szinton.gk.math.Vector3f;
 import pl.szinton.gk.view.Camera3D;
 import pl.szinton.gk.view.Model3D;
+import pl.szinton.gk.view.NormalMap;
 import pl.szinton.gk.view.Plane2D;
 
 import java.awt.*;
@@ -13,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class HiddenSurfaceRemoval {
+import static pl.szinton.gk.utils.Constants.DEFAULT_BACKGROUND_COLOR;
 
-    private final static Color DEFAULT_BACKGROUND_COLOR = new Color(150, 150, 150);
+public class HiddenSurfaceRemoval {
 
     private final static Vector3f cameraVector = new Vector3f(0f, 0f, -1f);
 
@@ -31,8 +32,7 @@ public class HiddenSurfaceRemoval {
 
     private static List<Plane2D> getProjectedObjects(Camera3D camera, List<Model3D> objects) {
         List<Plane2D> projectedPlanes = new ArrayList<>();
-        for (int i = 0; i < objects.size(); i++) {
-            Model3D model = objects.get(i);
+        for (Model3D model : objects) {
             List<List<Integer>> planes = model.getPlanes();
             List<Vector3f> projectedVertices = model.getVertices().stream()
                     .map(camera::projectPoint).toList();
@@ -41,7 +41,7 @@ public class HiddenSurfaceRemoval {
                 List<Vector3f> planeVertices = planeVerticesOrder.stream()
                         .map(projectedVertices::get)
                         .collect(Collectors.toList());
-                projectedPlanes.add(new Plane2D(planeVertices, planeVerticesOrder, i));
+                projectedPlanes.add(new Plane2D(planeVertices, planeVerticesOrder));
             }
         }
         return projectedPlanes;
@@ -52,15 +52,15 @@ public class HiddenSurfaceRemoval {
         List<PlaneIntersection> intersections = findPlaneIntersections(planes, scanLineY);
         sortIntersectionsByX(intersections);
         boolean[] cip = new boolean[planes.size()]; // cip - currently intersecting planes
-        fillScanLine(g, 0f, viewWidth, scanLineY, DEFAULT_BACKGROUND_COLOR, viewHeight);
+        fillScanLine(g, 0, viewWidth, scanLineY, null);
         if (intersections.size() > 0) {
             Vector3f startPoint = new Vector3f();
             for (int i = 0; i < intersections.size(); i++) {
                 PlaneIntersection intersection = intersections.get(i);
                 int planeId = intersection.planeId();
-                Color fillColor = getFillColor(planes, planeComparisons, cip, intersections, i);
+                Plane2D planeInFront = getPlaneInFront(planes, planeComparisons, cip, intersections, i);
                 Vector3f endPoint = intersection.point();
-                fillScanLine(g, startPoint.getX(), endPoint.getX(), scanLineY, fillColor, viewHeight);
+                fillScanLine(g, (int) startPoint.getX(), (int) endPoint.getX(), scanLineY, planeInFront);
                 cip[planeId] = !cip[planeId];
                 startPoint = endPoint;
 
@@ -87,13 +87,13 @@ public class HiddenSurfaceRemoval {
         return true;
     }
 
-    private static Color getFillColor(List<Plane2D> planes, List<Vector2i> planeComparisons,
-                                      boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
+    private static Plane2D getPlaneInFront(List<Plane2D> planes, List<Vector2i> planeComparisons,
+                                         boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
         int cipCount = countCurrentlyIntersectingPlanes(cip);
         return switch (cipCount) {
-            case 0 -> DEFAULT_BACKGROUND_COLOR;
-            case 1 -> planes.get(getIndexOfFirstTrue(cip)).getColor();
-            default -> getColorOfMostInFrontPlane(planes, planeComparisons, cip, intersections, intersectionIndex);
+            case 0 -> null;
+            case 1 -> planes.get(getIndexOfFirstTrue(cip));
+            default -> findMostInFrontPlane(planes, planeComparisons, cip, intersections, intersectionIndex);
         };
     }
 
@@ -158,7 +158,7 @@ public class HiddenSurfaceRemoval {
         return count;
     }
 
-    private static Color getColorOfMostInFrontPlane(List<Plane2D> planes, List<Vector2i> planeComparisons,
+    private static Plane2D findMostInFrontPlane(List<Plane2D> planes, List<Vector2i> planeComparisons,
                                                     boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
         float startX = intersections.get(intersectionIndex).edgeStart().getX();
         float endX = intersections.get(intersectionIndex).edgeEnd().getX();
@@ -170,9 +170,9 @@ public class HiddenSurfaceRemoval {
             }
         }
         if (closest.index != -1)
-            return planes.get(closest.index).getColor();
+            return planes.get(closest.index);
         else
-            return DEFAULT_BACKGROUND_COLOR;
+            return null;
     }
 
     private static void checkPlane(List<Plane2D> planes, List<Vector2i> planeComparisons, ClosestPlaneFound closest,
@@ -205,7 +205,7 @@ public class HiddenSurfaceRemoval {
     }
 
     private static float planeToCameraDotProduct(Plane2D plane) {
-        Vector3f planeVector = plane.normalVector().unitVector();
+        Vector3f planeVector = plane.normalVector().normalize();
         return -Vector3f.dotProduct(cameraVector, planeVector);
     }
 
@@ -248,9 +248,17 @@ public class HiddenSurfaceRemoval {
         return bd.floatValue();
     }
 
-    private static void fillScanLine(Graphics2D g, float startX, float endX, int scanLineY, Color color, int viewHeight) {
-        g.setColor(color);
-        g.drawLine((int) startX, scanLineY, (int) endX, scanLineY);
+    private static void fillScanLine(Graphics2D g, int startX, int endX, int scanLineY, Plane2D plane) {
+        if (plane == null) {
+            g.setColor(DEFAULT_BACKGROUND_COLOR);
+            g.drawLine(startX, scanLineY, endX, scanLineY);
+        } else {
+            for (int x = startX; x <= endX; x++) {
+                Color color = NormalMap.getPlanePixelColor(plane, x, scanLineY);
+                g.setColor(color);
+                g.drawLine(x, scanLineY, x, scanLineY);
+            }
+        }
     }
 
     private static class ClosestPlaneFound {

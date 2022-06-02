@@ -13,9 +13,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.List;
 
+import static pl.szinton.gk.utils.Constants.DEFAULT_BACKGROUND_COLOR;
+
 public class ApplicationWindow extends JFrame implements KeyListener {
 
-    private final static Color DEFAULT_BACKGROUND_COLOR = new Color(150, 150, 150);
     public final static int DEFAULT_WIDTH = 800;
     public final static int DEFAULT_HEIGHT = 600;
 

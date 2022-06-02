@@ -45,7 +45,7 @@ public class Vector3f {
         return new Vector3f(-x, -y, -z);
     }
 
-    public Vector3f unitVector() {
+    public Vector3f normalize() {
         float m = magnitude();
         return new Vector3f(x / m, y / m, z / m);
     }

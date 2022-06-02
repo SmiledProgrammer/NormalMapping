@@ -5,31 +5,15 @@ import pl.szinton.gk.math.Vector3f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class Plane2D {
 
     private final List<Vector3f> vertices;
     private final List<Integer> verticesOrder;
-    private final Color color;
 
-    public Plane2D(List<Vector3f> vertices, List<Integer> verticesOrder, int seedSalt) {
+    public Plane2D(List<Vector3f> vertices, List<Integer> verticesOrder) {
         this.vertices = new ArrayList<>(vertices);
         this.verticesOrder = new ArrayList<>(verticesOrder);
-
-        int seed = generateSeed(verticesOrder);
-        Random random = new Random(seed + seedSalt);
-        int redValue = random.nextInt(130) + 126;
-        int blueValue = random.nextInt(130) + 126;
-        this.color = new Color(redValue, 0, blueValue);
-    }
-
-    private int generateSeed(List<Integer> verticesOrder) {
-        int seed = 0;
-        for (int i = 0; i < verticesOrder.size(); i++) {
-            seed += i * verticesOrder.get(i) * verticesOrder.get(i) * verticesOrder.get(i);
-        }
-        return (seed * 31) / 17;
     }
 
     public Vector3f normalVector() {
@@ -47,9 +31,5 @@ public class Plane2D {
 
     public List<Integer> getVerticesOrder() {
         return verticesOrder;
-    }
-
-    public Color getColor() {
-        return color;
     }
 }
