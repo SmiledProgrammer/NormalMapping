@@ -5,7 +5,7 @@ import pl.szinton.gk.math.Vector3f;
 import pl.szinton.gk.view.Camera3D;
 import pl.szinton.gk.view.Model3D;
 import pl.szinton.gk.view.NormalMap;
-import pl.szinton.gk.view.Plane2D;
+import pl.szinton.gk.view.Plane;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -21,7 +21,7 @@ public class HiddenSurfaceRemoval {
     private final static Vector3f cameraVector = new Vector3f(0f, 0f, -1f);
 
     public static void render(Graphics2D g, Camera3D camera, List<Model3D> objects) {
-        List<Plane2D> planes = getProjectedObjects(camera, objects);
+        List<Plane> planes = getProjectedObjects(camera, objects);
         List<Vector2i> planeComparisons = new ArrayList<>(); // stores a pair of plane ids that were already compared (first id belongs to plane closer to camera)
         int viewWidth = camera.getFrameSize().getX();
         int viewHeight = camera.getFrameSize().getY();
@@ -30,8 +30,8 @@ public class HiddenSurfaceRemoval {
         }
     }
 
-    private static List<Plane2D> getProjectedObjects(Camera3D camera, List<Model3D> objects) {
-        List<Plane2D> projectedPlanes = new ArrayList<>();
+    private static List<Plane> getProjectedObjects(Camera3D camera, List<Model3D> objects) {
+        List<Plane> projectedPlanes = new ArrayList<>();
         for (Model3D model : objects) {
             List<List<Integer>> planes = model.getPlanes();
             List<Vector3f> projectedVertices = model.getVertices().stream()
@@ -45,14 +45,14 @@ public class HiddenSurfaceRemoval {
                 List<Vector3f> planeVertices3D = planeVerticesOrder.stream()
                         .map(vertices3D::get)
                         .collect(Collectors.toList());
-                projectedPlanes.add(new Plane2D(planeVertices, planeVertices3D, planeVerticesOrder));
+                projectedPlanes.add(new Plane(planeVertices, planeVertices3D, planeVerticesOrder));
             }
         }
         return projectedPlanes;
     }
 
     private static void analyzeScanline(int scanLineY, Graphics2D g, int viewWidth,
-                                        List<Plane2D> planes, List<Vector2i> planeComparisons) {
+                                        List<Plane> planes, List<Vector2i> planeComparisons) {
         List<PlaneIntersection> intersections = findPlaneIntersections(planes, scanLineY);
         sortIntersectionsByX(intersections);
         boolean[] cip = new boolean[planes.size()]; // cip - currently intersecting planes
@@ -62,7 +62,7 @@ public class HiddenSurfaceRemoval {
             for (int i = 0; i < intersections.size(); i++) {
                 PlaneIntersection intersection = intersections.get(i);
                 int planeId = intersection.planeId();
-                Plane2D planeInFront = getPlaneInFront(planes, planeComparisons, cip, intersections, i);
+                Plane planeInFront = getPlaneInFront(planes, planeComparisons, cip, intersections, i);
                 Vector3f endPoint = intersection.point();
                 fillScanLine(g, (int) startPoint.getX(), (int) endPoint.getX(), scanLineY, planeInFront);
                 cip[planeId] = !cip[planeId];
@@ -91,7 +91,7 @@ public class HiddenSurfaceRemoval {
         return true;
     }
 
-    private static Plane2D getPlaneInFront(List<Plane2D> planes, List<Vector2i> planeComparisons,
+    private static Plane getPlaneInFront(List<Plane> planes, List<Vector2i> planeComparisons,
                                          boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
         int cipCount = countCurrentlyIntersectingPlanes(cip);
         return switch (cipCount) {
@@ -110,10 +110,10 @@ public class HiddenSurfaceRemoval {
         return -1;
     }
 
-    private static List<PlaneIntersection> findPlaneIntersections(List<Plane2D> planes, int scanLineY) {
+    private static List<PlaneIntersection> findPlaneIntersections(List<Plane> planes, int scanLineY) {
         List<PlaneIntersection> intersections = new ArrayList<>();
         for (int i = 0; i < planes.size(); i++) {
-            Plane2D plane = planes.get(i);
+            Plane plane = planes.get(i);
             List<Vector3f> vertices = plane.getVertices2D();
             List<Integer> order = plane.getVerticesOrder();
             for (int j = 0; j < order.size(); j++) {
@@ -162,8 +162,8 @@ public class HiddenSurfaceRemoval {
         return count;
     }
 
-    private static Plane2D findMostInFrontPlane(List<Plane2D> planes, List<Vector2i> planeComparisons,
-                                                    boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
+    private static Plane findMostInFrontPlane(List<Plane> planes, List<Vector2i> planeComparisons,
+                                              boolean[] cip, List<PlaneIntersection> intersections, int intersectionIndex) {
         float startX = intersections.get(intersectionIndex).edgeStart().getX();
         float endX = intersections.get(intersectionIndex).edgeEnd().getX();
         ClosestPlaneFound closest = new ClosestPlaneFound();
@@ -179,12 +179,12 @@ public class HiddenSurfaceRemoval {
             return null;
     }
 
-    private static void checkPlane(List<Plane2D> planes, List<Vector2i> planeComparisons, ClosestPlaneFound closest,
+    private static void checkPlane(List<Plane> planes, List<Vector2i> planeComparisons, ClosestPlaneFound closest,
                                    PlaneIntersection intersection, float startX, float endX) {
         int planeId = intersection.planeId();
         int planeOnTop = planesAlreadyCompared(planeComparisons, planeId, closest.index);
         if (planeOnTop == -1) {
-            Plane2D plane = planes.get(planeId);
+            Plane plane = planes.get(planeId);
             float planeDotProduct = planeToCameraDotProduct(plane);
             if (planeDotProduct < 1f) {
                 float planeMinZ = round(getMinZOfPlaneVertices(plane, startX, endX));
@@ -200,7 +200,7 @@ public class HiddenSurfaceRemoval {
             }
         } else {
             if (planeOnTop != closest.index) {
-                Plane2D plane = planes.get(planeId);
+                Plane plane = planes.get(planeId);
                 float planeMinZ = round(getMinZOfPlaneVertices(plane, startX, endX));
                 float planeDotProduct = planeToCameraDotProduct(plane);
                 closest.update(planeMinZ, planeDotProduct, planeId);
@@ -208,7 +208,7 @@ public class HiddenSurfaceRemoval {
         }
     }
 
-    private static float planeToCameraDotProduct(Plane2D plane) {
+    private static float planeToCameraDotProduct(Plane plane) {
         Vector3f planeVector = plane.normalVector2D().normalize();
         return -Vector3f.dotProduct(cameraVector, planeVector);
     }
@@ -226,7 +226,7 @@ public class HiddenSurfaceRemoval {
         return -1;
     }
 
-    private static float getMinZOfPlaneVertices(Plane2D plane, float x1, float x2) {
+    private static float getMinZOfPlaneVertices(Plane plane, float x1, float x2) {
         float roundX1 = round(x1);
         float roundX2 = round(x2);
         double minZ = plane.getVertices2D().stream()
@@ -252,7 +252,7 @@ public class HiddenSurfaceRemoval {
         return bd.floatValue();
     }
 
-    private static void fillScanLine(Graphics2D g, int startX, int endX, int scanLineY, Plane2D plane) {
+    private static void fillScanLine(Graphics2D g, int startX, int endX, int scanLineY, Plane plane) {
         if (plane == null) {
             g.setColor(DEFAULT_BACKGROUND_COLOR);
             g.drawLine(startX, scanLineY, endX, scanLineY);

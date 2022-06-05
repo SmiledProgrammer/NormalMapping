@@ -6,13 +6,13 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Plane2D {
+public class Plane {
 
     private final List<Vector3f> vertices2D;
     private final List<Vector3f> vertices3D;
     private final List<Integer> verticesOrder;
 
-    public Plane2D(List<Vector3f> vertices2D, List<Vector3f> vertices3D, List<Integer> verticesOrder) {
+    public Plane(List<Vector3f> vertices2D, List<Vector3f> vertices3D, List<Integer> verticesOrder) {
         this.vertices2D = new ArrayList<>(vertices2D);
         this.vertices3D = new ArrayList<>(vertices3D);
         this.verticesOrder = new ArrayList<>(verticesOrder);
