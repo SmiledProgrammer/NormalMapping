@@ -3,8 +3,11 @@ package pl.szinton.gk.view;
 import pl.szinton.gk.math.Vector2f;
 import pl.szinton.gk.math.Vector3f;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 public class NormalMap {
 
@@ -14,8 +17,18 @@ public class NormalMap {
     private static Vector3f negativeLightDirection = new Vector3f(1.5f, 1.2f, 1f).negative().normalize();
     private static int[][] normalMapPixels;
 
-    public static void loadNormalMap(File file) {
-        throw new UnsupportedOperationException(); // TODO
+    public static void loadNormalMap(File file) throws IOException {
+        BufferedImage bimg = ImageIO.read(file);
+        int width = bimg.getWidth();
+        int height = bimg.getHeight();
+
+        for (int row = 0; row < height; row++)
+            for (int col = 0; col < width; col++)
+                normalMapPixels[row][col] = bimg.getRGB(col, row);
+    }
+
+    private static Color getPixelColorFromMapByCoordinates(int x, int y) {
+        return new Color(normalMapPixels[x][y]);
     }
 
     public static void setLightDirection(Vector3f direction) {
