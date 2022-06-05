@@ -44,14 +44,13 @@ public class Application extends Thread {
 
     @Override
     public void run() {
-        NormalMap.setLightDirection(new Vector3f(0f, -1f, 0f));
         while (true) {
             Vector3f lightVector = NormalMap.getLightDirection();
-            SimpleMatrix rotationMatrix1 = Matrix.rotationX((float) (4f * Math.PI / 180f));
+            SimpleMatrix rotationMatrix1 = Matrix.rotationY((float) (4f * Math.PI / 180f));
             SimpleMatrix rotationMatrix2 = Matrix.rotationZ((float) (2f * Math.PI / 180f));
             Vector3f newLightVector = MatrixUtils.getVectorFromMatrix(
-                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix1.mult(rotationMatrix2)));
-//            NormalMap.setLightDirection(newLightVector);
+                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix1));
+            NormalMap.setLightDirection(newLightVector);
             applicationWindow.repaint();
             try {
                 Thread.sleep(1000 / 10);

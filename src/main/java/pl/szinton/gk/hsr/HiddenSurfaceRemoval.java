@@ -186,7 +186,7 @@ public class HiddenSurfaceRemoval {
         if (planeOnTop == -1) {
             Plane plane = planes.get(planeId);
             float planeDotProduct = planeToCameraDotProduct(plane);
-            if (planeDotProduct < 1f) {
+            if (planeDotProduct < 0f) {
                 float planeMinZ = round(getMinZOfPlaneVertices(plane, startX, endX));
                 if (planeMinZ < closest.minZ) {
                     planeComparisons.add(new Vector2i(planeId, closest.index));
@@ -210,7 +210,7 @@ public class HiddenSurfaceRemoval {
 
     private static float planeToCameraDotProduct(Plane plane) {
         Vector3f planeVector = plane.normalVector2D().normalize();
-        return -Vector3f.dotProduct(cameraVector, planeVector);
+        return Vector3f.dotProduct(cameraVector, planeVector);
     }
 
     private static int planesAlreadyCompared(List<Vector2i> planeComparisons, int planeId1, int planeId2) {

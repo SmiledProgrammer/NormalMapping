@@ -87,6 +87,6 @@ public class Vector3f {
     }
 
     public static float dotProduct(Vector3f u, Vector3f v) {
-        return u.getX() * v.getX() + u.getY() * v.getY() + u.getZ() + v.getZ();
+        return u.getX() * v.getX() + u.getY() * v.getY() + u.getZ() * v.getZ();
     }
 }

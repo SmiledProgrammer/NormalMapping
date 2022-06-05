@@ -104,7 +104,7 @@ public class NormalMap {
         Vector2f deltaUV1 = uv2.subtract(uv1);
         Vector2f deltaUV2 = uv3.subtract(uv1);
         float f = 1f / (deltaUV1.getX() * deltaUV2.getY() - deltaUV2.getX() * deltaUV1.getY());
-        Vector3f normal = plane.normalVector3D().normalize();
+        Vector3f normal = Vector3f.crossProduct(edge2, edge1).normalize();
         Vector3f tangent = new Vector3f(
                 f * (deltaUV2.getY() * edge1.getX() - deltaUV1.getY() * edge2.getX()),
                 f * (deltaUV2.getY() * edge1.getY() - deltaUV1.getY() * edge2.getY()),
@@ -124,10 +124,15 @@ public class NormalMap {
         Vector3f normalMapVector = getNormalMapVector(tangentPoint);
         Vector3f combinedNormal = MatrixUtils.getVectorFromMatrix(
                 MatrixUtils.multiplyVectorByMatrix(normalMapVector, tbnMatrix)).normalize();
-        float dotProduct = Vector3f.dotProduct(negativeLightDirection, combinedNormal);
-        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 2f) / 4f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
+        float dotProduct = Vector3f.dotProduct(negativeLightDirection.negative(), combinedNormal);
+        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 1f) / 2f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE))); // TODO: check if normalizing is correct
         return new Color(lightValue, lightValue, lightValue);
 //        return new Color(20 + lightValue, 7 + lightValue, 2 + lightValue);
+
+//        Vector3f planeNormal = plane.normalVector3D().normalize();
+//        float dotProduct = Vector3f.dotProduct(negativeLightDirection, planeNormal);
+//        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 2f) / 4f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
+//        return new Color(lightValue, lightValue, lightValue);
     }
 
     private static Vector2f findTangentPlaneProjectionPoint(int x, int y, List<Vector2f> planeEdgeLines) {
