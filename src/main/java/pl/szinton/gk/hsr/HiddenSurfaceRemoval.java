@@ -26,7 +26,7 @@ public class HiddenSurfaceRemoval {
         int viewWidth = camera.getFrameSize().getX();
         int viewHeight = camera.getFrameSize().getY();
         for (int y = 0; y < viewHeight; y++) {
-            analyzeScanline(y, g, viewWidth, viewHeight, planes, planeComparisons);
+            analyzeScanline(y, g, viewWidth, planes, planeComparisons);
         }
     }
 
@@ -36,18 +36,22 @@ public class HiddenSurfaceRemoval {
             List<List<Integer>> planes = model.getPlanes();
             List<Vector3f> projectedVertices = model.getVertices().stream()
                     .map(camera::projectPoint).toList();
+            List<Vector3f> vertices3D = model.getVertices();
             for (List<Integer> plane : planes) {
                 List<Integer> planeVerticesOrder = new ArrayList<>(plane);
                 List<Vector3f> planeVertices = planeVerticesOrder.stream()
                         .map(projectedVertices::get)
                         .collect(Collectors.toList());
-                projectedPlanes.add(new Plane2D(planeVertices, planeVerticesOrder));
+                List<Vector3f> planeVertices3D = planeVerticesOrder.stream()
+                        .map(vertices3D::get)
+                        .collect(Collectors.toList());
+                projectedPlanes.add(new Plane2D(planeVertices, planeVertices3D, planeVerticesOrder));
             }
         }
         return projectedPlanes;
     }
 
-    private static void analyzeScanline(int scanLineY, Graphics2D g, int viewWidth, int viewHeight,
+    private static void analyzeScanline(int scanLineY, Graphics2D g, int viewWidth,
                                         List<Plane2D> planes, List<Vector2i> planeComparisons) {
         List<PlaneIntersection> intersections = findPlaneIntersections(planes, scanLineY);
         sortIntersectionsByX(intersections);
@@ -110,7 +114,7 @@ public class HiddenSurfaceRemoval {
         List<PlaneIntersection> intersections = new ArrayList<>();
         for (int i = 0; i < planes.size(); i++) {
             Plane2D plane = planes.get(i);
-            List<Vector3f> vertices = plane.getVertices();
+            List<Vector3f> vertices = plane.getVertices2D();
             List<Integer> order = plane.getVerticesOrder();
             for (int j = 0; j < order.size(); j++) {
                 Vector3f edgeStart = vertices.get(j);
@@ -205,7 +209,7 @@ public class HiddenSurfaceRemoval {
     }
 
     private static float planeToCameraDotProduct(Plane2D plane) {
-        Vector3f planeVector = plane.normalVector().normalize();
+        Vector3f planeVector = plane.normalVector2D().normalize();
         return -Vector3f.dotProduct(cameraVector, planeVector);
     }
 
@@ -225,7 +229,7 @@ public class HiddenSurfaceRemoval {
     private static float getMinZOfPlaneVertices(Plane2D plane, float x1, float x2) {
         float roundX1 = round(x1);
         float roundX2 = round(x2);
-        double minZ = plane.getVertices().stream()
+        double minZ = plane.getVertices2D().stream()
                 .filter(v -> {
                     float roundVertexX = round(v.getX());
                     return roundVertexX == roundX1 ||
@@ -234,7 +238,7 @@ public class HiddenSurfaceRemoval {
                 .mapToDouble(Vector3f::getZ)
                 .min().orElse(Double.NaN);
         if (Double.isNaN(minZ)) {
-            return (float) plane.getVertices().stream()
+            return (float) plane.getVertices2D().stream()
                     .mapToDouble(Vector3f::getZ)
                     .min().orElse(Double.NaN);
         } else {
