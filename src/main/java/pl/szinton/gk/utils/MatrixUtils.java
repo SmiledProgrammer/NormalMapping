@@ -16,6 +16,13 @@ public class MatrixUtils {
         return matrix.mult(extendedVector(vector));
     }
 
+    public static SimpleMatrix multiplyVectorByMatrix(Vector3f vector, SimpleMatrix matrix) {
+        SimpleMatrix vectorMatrix = new SimpleMatrix(3, 1, true, new float[]{
+                vector.getX(), vector.getY(), vector.getZ()
+        });
+        return matrix.mult(vectorMatrix);
+    }
+
     public static Vector3f getVectorFromMatrix(SimpleMatrix vectorMatrix) {
         float x = (float) vectorMatrix.get(0, 0);
         float y = (float) vectorMatrix.get(1, 0);

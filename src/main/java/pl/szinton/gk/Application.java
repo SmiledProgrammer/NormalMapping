@@ -35,7 +35,7 @@ public class Application extends Thread {
                 ModelUtils.createCuboidModel(new Vector3f(0f, 0f, 0f), new Vector3f(1f, 1f, 1f))
         );
 
-        File normalMapFile = ResourceUtils.getFileFromResources("normal2.jpg");
+        File normalMapFile = ResourceUtils.getFileFromResources("normal1.jpg");
         NormalMap.loadNormalMap(normalMapFile);
 
         Thread appThread = new Application(camera, objects);
@@ -46,10 +46,11 @@ public class Application extends Thread {
     public void run() {
         while (true) {
             Vector3f lightVector = NormalMap.getLightDirection();
-            SimpleMatrix rotationMatrix = Matrix.rotationZ((float) (2f * Math.PI / 180f));
+            SimpleMatrix rotationMatrix1 = Matrix.rotationX((float) (4f * Math.PI / 180f));
+            SimpleMatrix rotationMatrix2 = Matrix.rotationZ((float) (2f * Math.PI / 180f));
             Vector3f newLightVector = MatrixUtils.getVectorFromMatrix(
-                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix));
-//            NormalMap.setLightDirection(newLightVector);
+                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix1.mult(rotationMatrix2)));
+            NormalMap.setLightDirection(newLightVector);
             applicationWindow.repaint();
             try {
                 Thread.sleep(1000 / 10);

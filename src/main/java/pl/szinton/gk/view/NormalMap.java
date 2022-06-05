@@ -1,8 +1,10 @@
 package pl.szinton.gk.view;
 
+import org.ejml.simple.SimpleMatrix;
 import pl.szinton.gk.math.Vector2f;
 import pl.szinton.gk.math.Vector2i;
 import pl.szinton.gk.math.Vector3f;
+import pl.szinton.gk.utils.MatrixUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -45,8 +47,8 @@ public class NormalMap {
     }
 
     private static Vector2i convertFloatCoordinatesToIntCoordinates(Vector2f floatCoordinates) {
-        float x = floatCoordinates.x();
-        float y = floatCoordinates.y();
+        float x = floatCoordinates.getX();
+        float y = floatCoordinates.getY();
         if (x < 0f || x > 1f || y < 0f || y > 1f)
             throw new IllegalArgumentException("Bad range of float coordinates when referring to pixel!");
         int b = normalMapPixels.length - 1;
@@ -89,13 +91,43 @@ public class NormalMap {
 
     private static Color getPlanePixelColor(Plane plane, int x, int y, List<Vector2f> planeEdgeLines) {
         Vector2f tangentPoint = findTangentPlaneProjectionPoint(x, y, planeEdgeLines);
-        Vector3f normalMapVector = getNormalMapVector(tangentPoint);
-        Vector3f planeNormal = plane.normalVector3D().normalize();
-        Vector3f combinedNormal = Vector3f.crossProduct(planeNormal, normalMapVector).normalize();
+
+        List<Vector3f> vertices = plane.getVertices3D();
+        Vector3f pos1 = vertices.get(0);
+        Vector3f pos2 = vertices.get(1);
+        Vector3f pos3 = vertices.get(2);
+        Vector2f uv1 = new Vector2f(0f, 1f);
+        Vector2f uv2 = new Vector2f(0f, 0f);
+        Vector2f uv3 = new Vector2f(1f, 0f);
+        Vector3f edge1 = pos2.subtract(pos1);
+        Vector3f edge2 = pos3.subtract(pos1);
+        Vector2f deltaUV1 = uv2.subtract(uv1);
+        Vector2f deltaUV2 = uv3.subtract(uv1);
+        float f = 1f / (deltaUV1.getX() * deltaUV2.getY() - deltaUV2.getX() * deltaUV1.getY());
+        Vector3f normal = plane.normalVector3D().normalize();
+        Vector3f tangent = new Vector3f(
+                f * (deltaUV2.getY() * edge1.getX() - deltaUV1.getY() * edge2.getX()),
+                f * (deltaUV2.getY() * edge1.getY() - deltaUV1.getY() * edge2.getY()),
+                f * (deltaUV2.getY() * edge1.getZ() - deltaUV1.getY() * edge2.getZ())
+        ).normalize();
+        Vector3f bitangent = new Vector3f(
+                f * (-deltaUV2.getX() * edge1.getX() + deltaUV1.getX() * edge2.getX()),
+                f * (-deltaUV2.getX() * edge1.getY() + deltaUV1.getX() * edge2.getY()),
+                f * (-deltaUV2.getX() * edge1.getZ() + deltaUV1.getX() * edge2.getZ())
+        ).normalize();
+        SimpleMatrix tbnMatrix = new SimpleMatrix(3, 3, true, new float[]{
+                tangent.getX(), bitangent.getX(), normal.getX(),
+                tangent.getY(), bitangent.getY(), normal.getY(),
+                tangent.getZ(), bitangent.getZ(), normal.getZ()
+        });
+
+        Vector3f normalMapVector = getNormalMapVector(tangentPoint).normalize();
+        Vector3f combinedNormal = MatrixUtils.getVectorFromMatrix(
+                MatrixUtils.multiplyVectorByMatrix(normalMapVector, tbnMatrix)).normalize();
         float dotProduct = Vector3f.dotProduct(negativeLightDirection, combinedNormal);
         int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 2f) / 4f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
         return new Color(lightValue, lightValue, lightValue);
-//        return new Color(50 + lightValue, 40 + lightValue, 2 + lightValue);
+//        return new Color(20 + lightValue, 7 + lightValue, 2 + lightValue);
     }
 
     private static Vector2f findTangentPlaneProjectionPoint(int x, int y, List<Vector2f> planeEdgeLines) {
@@ -110,15 +142,15 @@ public class NormalMap {
     }
 
     private static float findDistanceFromLine(Vector2f point, Vector2f lineCoefficients) {
-        float x = point.x();
-        float y = point.y();
-        if (lineCoefficients.y() == null) {
-            float lineX = lineCoefficients.x();
+        float x = point.getX();
+        float y = point.getY();
+        if (lineCoefficients.getY() == null) {
+            float lineX = lineCoefficients.getX();
             return Math.abs(x - lineX);
         }
-        float a = lineCoefficients.x();
+        float a = lineCoefficients.getX();
         float b = -1f;
-        float c = lineCoefficients.y();
+        float c = lineCoefficients.getY();
         double distance = Math.abs(a * x + b * y + c) / Math.sqrt(a * a + b * b);
         return (float) distance;
     }
