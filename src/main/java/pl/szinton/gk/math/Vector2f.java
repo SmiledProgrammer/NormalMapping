@@ -1,4 +1,4 @@
 package pl.szinton.gk.math;
 
-public record Vector2f(float x, float y) {
+public record Vector2f(Float x, Float y) {
 }

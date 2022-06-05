@@ -16,7 +16,8 @@ import static pl.szinton.gk.view.ApplicationWindow.DEFAULT_WIDTH;
 public class Application {
 
     public static void main(String[] args) {
-        Vector3f initialPosition = new Vector3f(-4f, 2f, 5f);
+//        Vector3f initialPosition = new Vector3f(-4f, 2f, 5f);
+        Vector3f initialPosition = new Vector3f(0.24f, 0.5f, 0.76f);
         Vector2i frameSize = new Vector2i(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
         Camera3D camera = new Camera3D(frameSize, initialPosition);

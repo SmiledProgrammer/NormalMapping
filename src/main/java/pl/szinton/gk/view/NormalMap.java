@@ -20,6 +20,10 @@ public class NormalMap {
     private static Vector3f negativeLightDirection = new Vector3f(1.5f, 1.2f, 1f).negative().normalize();
     private static Color[][] normalMapPixels;
 
+    public static void setLightDirection(Vector3f direction) {
+        negativeLightDirection = direction.negative().normalize();
+    }
+
     public static void loadNormalMap(File file) {
         try {
             BufferedImage img = ImageIO.read(file);
@@ -40,13 +44,9 @@ public class NormalMap {
         float x = floatCoordinates.x();
         float y = floatCoordinates.y();
         if (x < 0f || x > 1f || y < 0f || y > 1f)
-            throw new IllegalArgumentException("Bad range of float coordinates when reffering to pixel!");
+            throw new IllegalArgumentException("Bad range of float coordinates when referring to pixel!");
         int b = normalMapPixels.length - 1;
         return new Vector2i((int) (x * b), (int) (y * b));
-    }
-
-    public static void setLightDirection(Vector3f direction) {
-        negativeLightDirection = direction.negative().normalize();
     }
 
     public static void fillHorizontalLine(Graphics2D g, int startX, int endX, int y, Plane plane) {
@@ -75,7 +75,10 @@ public class NormalMap {
     private static Vector2f findEdgeLineCoefficients(Vector3f v1, Vector3f v2) {
         float xDiff = v1.getX() - v2.getX();
         float yDiff = v1.getY() - v2.getY();
-        float a = (xDiff != 0f) ? (yDiff / xDiff) : Float.MAX_VALUE;
+        if (xDiff == 0f) {
+            return new Vector2f(v1.getX(), null); // vertical line: storing information about line's x coordinate
+        }
+        float a = yDiff / xDiff;
         float b = v1.getY() - a * v1.getX();
         return new Vector2f(a, b);
     }
@@ -91,7 +94,7 @@ public class NormalMap {
     }
 
     private static Vector2f findTangentPlaneProjectionPoint(int x, int y, List<Vector2f> planeEdgeLines) {
-        Vector2f point = new Vector2f(x, y);
+        Vector2f point = new Vector2f((float) x, (float) y);
         float d0 = findDistanceFromLine(point, planeEdgeLines.get(0));
         float d1 = findDistanceFromLine(point, planeEdgeLines.get(1));
         float d2 = findDistanceFromLine(point, planeEdgeLines.get(2));
@@ -104,6 +107,10 @@ public class NormalMap {
     private static float findDistanceFromLine(Vector2f point, Vector2f lineCoefficients) {
         float x = point.x();
         float y = point.y();
+        if (lineCoefficients.y() == null) {
+            float lineX = lineCoefficients.x();
+            return Math.abs(x - lineX);
+        }
         float a = lineCoefficients.x();
         float b = -1f;
         float c = lineCoefficients.y();
