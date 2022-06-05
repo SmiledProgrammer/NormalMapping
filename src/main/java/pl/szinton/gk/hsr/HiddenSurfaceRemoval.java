@@ -257,11 +257,7 @@ public class HiddenSurfaceRemoval {
             g.setColor(DEFAULT_BACKGROUND_COLOR);
             g.drawLine(startX, scanLineY, endX, scanLineY);
         } else {
-            for (int x = startX; x <= endX; x++) {
-                Color color = NormalMap.getPlanePixelColor(plane, x, scanLineY);
-                g.setColor(color);
-                g.drawLine(x, scanLineY, x, scanLineY);
-            }
+            NormalMap.fillHorizontalLine(g, startX, endX, scanLineY, plane);
         }
     }
 
