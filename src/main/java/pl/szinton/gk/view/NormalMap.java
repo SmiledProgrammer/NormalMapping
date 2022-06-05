@@ -14,10 +14,10 @@ import java.util.List;
 
 public class NormalMap {
 
-    private final static int MIN_LIGHT_VALUE = 30;
-    private final static int MAX_LIGHT_VALUE = 250;
+    private final static int MIN_LIGHT_VALUE = 40;
+    private final static int MAX_LIGHT_VALUE = 200;
 
-    private static Vector3f negativeLightDirection = new Vector3f(1.5f, 1.2f, 1f).negative().normalize();
+    private static Vector3f negativeLightDirection = new Vector3f(-3f, 1.2f, 1f).negative().normalize();
     private static Color[][] normalMapPixels;
 
     public static void setLightDirection(Vector3f direction) {
@@ -91,10 +91,11 @@ public class NormalMap {
         Vector2f tangentPoint = findTangentPlaneProjectionPoint(x, y, planeEdgeLines);
         Vector3f normalMapVector = getNormalMapVector(tangentPoint);
         Vector3f planeNormal = plane.normalVector3D().normalize();
-        Vector3f combinedNormal = planeNormal.add(normalMapVector).normalize();
+        Vector3f combinedNormal = Vector3f.crossProduct(planeNormal, normalMapVector).normalize();
         float dotProduct = Vector3f.dotProduct(negativeLightDirection, combinedNormal);
         int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 2f) / 4f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
         return new Color(lightValue, lightValue, lightValue);
+//        return new Color(50 + lightValue, 40 + lightValue, 2 + lightValue);
     }
 
     private static Vector2f findTangentPlaneProjectionPoint(int x, int y, List<Vector2f> planeEdgeLines) {
@@ -127,6 +128,9 @@ public class NormalMap {
         int x = normalMapCoordinates.getX();
         int y = normalMapCoordinates.getY();
         Color c = normalMapPixels[x][y];
-        return new Vector3f(c.getRed(), c.getGreen(), c.getBlue()).normalize();
+        float xValue = c.getRed() - 128;
+        float yValue = c.getGreen() - 128;
+        float zValue = c.getBlue() - 128;
+        return new Vector3f(xValue, yValue, zValue).normalize();
     }
 }

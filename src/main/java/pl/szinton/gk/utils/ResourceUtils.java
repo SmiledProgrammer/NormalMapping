@@ -10,7 +10,7 @@ public class ResourceUtils {
 
     public static File getFileFromResources(String filepath) {
         try {
-            URL resource = Application.class.getClassLoader().getResource("normalmap.jpg");
+            URL resource = Application.class.getClassLoader().getResource(filepath);
             if (resource == null) {
                 throw new IllegalArgumentException("File located at \"" + filepath + "\" does not exist!");
             }
