@@ -19,15 +19,15 @@ public class NormalMap {
     private final static int MIN_LIGHT_VALUE = 40;
     private final static int MAX_LIGHT_VALUE = 200;
 
-    private static Vector3f negativeLightDirection = new Vector3f(-3f, 1.2f, 1f).negative().normalize();
+    private static Vector3f lightDirection = new Vector3f(2f, 1.2f, 1f).normalize();
     private static Color[][] normalMapPixels;
 
     public static void setLightDirection(Vector3f direction) {
-        negativeLightDirection = direction.negative().normalize();
+        lightDirection = direction.normalize();
     }
 
     public static Vector3f getLightDirection() {
-        return negativeLightDirection.negative();
+        return lightDirection;
     }
 
     public static void loadNormalMap(File file) {
@@ -57,8 +57,9 @@ public class NormalMap {
 
     public static void fillHorizontalLine(Graphics2D g, int startX, int endX, int y, Plane plane) {
         List<Vector2f> planeEdgeLines = findPlaneEdgeLines(plane);
+        SimpleMatrix tbnMatrix = createTbnMatrix(plane);
         for (int x = startX; x <= endX; x++) {
-            Color color = getPlanePixelColor(plane, x, y, planeEdgeLines);
+            Color color = getPlanePixelColor(x, y, planeEdgeLines, tbnMatrix);
             g.setColor(color);
             g.drawLine(x, y, x, y);
         }
@@ -89,9 +90,7 @@ public class NormalMap {
         return new Vector2f(a, b);
     }
 
-    private static Color getPlanePixelColor(Plane plane, int x, int y, List<Vector2f> planeEdgeLines) {
-        Vector2f tangentPoint = findTangentPlaneProjectionPoint(x, y, planeEdgeLines);
-
+    private static SimpleMatrix createTbnMatrix(Plane plane) {
         List<Vector3f> vertices = plane.getVertices3D();
         Vector3f pos1 = vertices.get(0);
         Vector3f pos2 = vertices.get(1);
@@ -115,24 +114,21 @@ public class NormalMap {
                 f * (-deltaUV2.getX() * edge1.getY() + deltaUV1.getX() * edge2.getY()),
                 f * (-deltaUV2.getX() * edge1.getZ() + deltaUV1.getX() * edge2.getZ())
         ).normalize();
-        SimpleMatrix tbnMatrix = new SimpleMatrix(3, 3, true, new float[]{
+        return new SimpleMatrix(3, 3, true, new float[]{
                 tangent.getX(), bitangent.getX(), normal.getX(),
                 tangent.getY(), bitangent.getY(), normal.getY(),
                 tangent.getZ(), bitangent.getZ(), normal.getZ()
         });
+    }
 
+    private static Color getPlanePixelColor(int x, int y, List<Vector2f> planeEdgeLines, SimpleMatrix tbnMatrix) {
+        Vector2f tangentPoint = findTangentPlaneProjectionPoint(x, y, planeEdgeLines);
         Vector3f normalMapVector = getNormalMapVector(tangentPoint);
         Vector3f combinedNormal = MatrixUtils.getVectorFromMatrix(
                 MatrixUtils.multiplyVectorByMatrix(normalMapVector, tbnMatrix)).normalize();
-        float dotProduct = Vector3f.dotProduct(negativeLightDirection.negative(), combinedNormal);
-        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 1f) / 2f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE))); // TODO: check if normalizing is correct
+        float dotProduct = Vector3f.dotProduct(lightDirection, combinedNormal);
+        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 1f) / 2f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
         return new Color(lightValue, lightValue, lightValue);
-//        return new Color(20 + lightValue, 7 + lightValue, 2 + lightValue);
-
-//        Vector3f planeNormal = plane.normalVector3D().normalize();
-//        float dotProduct = Vector3f.dotProduct(negativeLightDirection, planeNormal);
-//        int lightValue = (int) (MIN_LIGHT_VALUE + ((dotProduct + 2f) / 4f * (MAX_LIGHT_VALUE - MIN_LIGHT_VALUE)));
-//        return new Color(lightValue, lightValue, lightValue);
     }
 
     private static Vector2f findTangentPlaneProjectionPoint(int x, int y, List<Vector2f> planeEdgeLines) {

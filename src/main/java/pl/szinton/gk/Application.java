@@ -46,10 +46,9 @@ public class Application extends Thread {
     public void run() {
         while (true) {
             Vector3f lightVector = NormalMap.getLightDirection();
-            SimpleMatrix rotationMatrix1 = Matrix.rotationY((float) (4f * Math.PI / 180f));
-            SimpleMatrix rotationMatrix2 = Matrix.rotationZ((float) (2f * Math.PI / 180f));
+            SimpleMatrix rotationMatrix = Matrix.rotationY((float) (6f * Math.PI / 180f));
             Vector3f newLightVector = MatrixUtils.getVectorFromMatrix(
-                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix1));
+                    MatrixUtils.multiplyExtendedVectorByMatrix(lightVector, rotationMatrix));
             NormalMap.setLightDirection(newLightVector);
             applicationWindow.repaint();
             try {
