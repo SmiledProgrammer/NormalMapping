@@ -3,8 +3,11 @@ package pl.szinton.gk;
 import pl.szinton.gk.math.Vector2i;
 import pl.szinton.gk.math.Vector3f;
 import pl.szinton.gk.utils.ModelUtils;
+import pl.szinton.gk.utils.ResourceUtils;
 import pl.szinton.gk.view.*;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import static pl.szinton.gk.view.ApplicationWindow.DEFAULT_HEIGHT;
@@ -22,6 +25,9 @@ public class Application {
         List<Model3D> objects = List.of(
                 ModelUtils.createCuboidModel(new Vector3f(0f, 0f, 0f), new Vector3f(1f, 1f, 1f))
         );
+
+        File normalMapFile = ResourceUtils.getFileFromResources("normalmap.jpg");
+        NormalMap.loadNormalMap(normalMapFile);
 
         ApplicationWindow app = new ApplicationWindow(camera, objects);
         app.run();
