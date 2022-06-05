@@ -1,6 +1,7 @@
 package pl.szinton.gk.view;
 
 import pl.szinton.gk.math.Vector2f;
+import pl.szinton.gk.math.Vector2i;
 import pl.szinton.gk.math.Vector3f;
 
 import javax.imageio.ImageIO;
@@ -8,6 +9,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.IllegalFormatException;
 
 public class NormalMap {
 
@@ -17,17 +19,35 @@ public class NormalMap {
     private static Vector3f negativeLightDirection = new Vector3f(1.5f, 1.2f, 1f).negative().normalize();
     private static int[][] normalMapPixels;
 
-    public static void loadNormalMap(File file) throws IOException {
+    public static void loadNormalMap(File file) throws Exception {
         BufferedImage bimg = ImageIO.read(file);
         int width = bimg.getWidth();
         int height = bimg.getHeight();
+        normalMapPixels = new int[height][width];
 
+        if (width != height)
+            throw new IllegalArgumentException("Normal map's width and height must be the same!");
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++)
                 normalMapPixels[row][col] = bimg.getRGB(col, row);
     }
 
-    private static Color getPixelColorFromMapByCoordinates(int x, int y) {
+    private static Vector2i convertFloatCoordinatesToIntCoordinates(Vector2f floatCoordinates) {
+        // f:[0,1] -> [a,b]; a=0; b=height - 1;
+        // f(x) = (1-x)a + xb = xb
+        float x = floatCoordinates.x();
+        float y = floatCoordinates.y();
+        if(x < 0 || x > 1 || y < 0 || y > 1)
+            throw new IllegalArgumentException("Bad range of float coordinates when reffering to pixel!");
+        int b = normalMapPixels.length - 1;
+        return new Vector2i((int) x*b, (int) y*b);
+
+    }
+
+    private static Color getPixelColorFromMapByCoordinates(Vector2f coordinates) {
+        Vector2i mapCoordinates = convertFloatCoordinatesToIntCoordinates(coordinates);
+        int x = mapCoordinates.getX();
+        int y = mapCoordinates.getY();
         return new Color(normalMapPixels[x][y]);
     }
 
