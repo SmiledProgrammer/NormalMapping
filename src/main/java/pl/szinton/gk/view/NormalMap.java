@@ -121,7 +121,7 @@ public class NormalMap {
                 tangent.getZ(), bitangent.getZ(), normal.getZ()
         });
 
-        Vector3f normalMapVector = getNormalMapVector(tangentPoint).normalize();
+        Vector3f normalMapVector = getNormalMapVector(tangentPoint);
         Vector3f combinedNormal = MatrixUtils.getVectorFromMatrix(
                 MatrixUtils.multiplyVectorByMatrix(normalMapVector, tbnMatrix)).normalize();
         float dotProduct = Vector3f.dotProduct(negativeLightDirection, combinedNormal);
@@ -160,9 +160,9 @@ public class NormalMap {
         int x = normalMapCoordinates.getX();
         int y = normalMapCoordinates.getY();
         Color c = normalMapPixels[x][y];
-        float xValue = c.getRed() - 128;
-        float yValue = c.getGreen() - 128;
-        float zValue = c.getBlue() - 128;
+        float xValue = (float) (c.getRed() - 128);
+        float yValue = (float) (c.getGreen() - 128);
+        float zValue = (float) (c.getBlue() - 128);
         return new Vector3f(xValue, yValue, zValue).normalize();
     }
 }
