@@ -14,14 +14,18 @@ import java.util.List;
 
 public class NormalMap {
 
-    private final static int MIN_LIGHT_VALUE = 50;
-    private final static int MAX_LIGHT_VALUE = 255;
+    private final static int MIN_LIGHT_VALUE = 30;
+    private final static int MAX_LIGHT_VALUE = 250;
 
     private static Vector3f negativeLightDirection = new Vector3f(1.5f, 1.2f, 1f).negative().normalize();
     private static Color[][] normalMapPixels;
 
     public static void setLightDirection(Vector3f direction) {
         negativeLightDirection = direction.negative().normalize();
+    }
+
+    public static Vector3f getLightDirection() {
+        return negativeLightDirection.negative();
     }
 
     public static void loadNormalMap(File file) {

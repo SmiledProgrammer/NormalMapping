@@ -41,7 +41,7 @@ public class ApplicationWindow extends JFrame implements KeyListener {
         }
 
         this.add(scenePanel);
-        this.setTitle("Hidden surface removal");
+        this.setTitle("Normal mapping");
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         this.setBackground(DEFAULT_BACKGROUND_COLOR);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -101,7 +101,6 @@ public class ApplicationWindow extends JFrame implements KeyListener {
             case KeyEvent.VK_P -> debug = !debug;
             case KeyEvent.VK_H -> changeScene();
         }
-        this.repaint();
     }
 
     @Override
